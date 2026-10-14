@@ -13,7 +13,7 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <h1>
-          Git+PostgreSQL テスト
+          Git+Docker+PostgreSQL テスト
         </h1>
         <table className={styles.table}>
           <thead>
