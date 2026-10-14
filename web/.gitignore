@@ -43,14 +43,11 @@ next-env.d.ts
 /src/generated/prisma
 
 # 個人的に入れないと判断
+# skills等、ビルドがなくても動く
 /.agents
 /.claude
 /.cursor
 /.devin
 /.windsurf
-/public
-/prisma
 AGENTS.md
-package-lock.json
 skills-lock.json
-README.md
