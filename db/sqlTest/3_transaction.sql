@@ -4,7 +4,7 @@ BEGIN;
   WITH updated AS (
     UPDATE results
     SET result='正常', conf_score=50, 
-    created_at = now(0), 
+    created_at = CURRENT_TIMESTAMP(0),
     created_by = 'tanaka'
     WHERE id=4 AND result IS NULL
     RETURNING id, result, created_at, created_by
