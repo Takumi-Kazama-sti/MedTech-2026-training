@@ -1,0 +1,14 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model meals {
+  id   Int    @id @default(autoincrement())
+  time String @db.VarChar(255)
+  meal String @db.VarChar(255)
+}
