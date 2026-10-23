@@ -1,0 +1,298 @@
+openapi: "3.0.3"
+info:
+  title: 出退勤アプリAPI
+  description: 出退勤アプリのAPIの仕様書
+  version: "1.0"
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      security: []
+      summary: ログイン
+      description: ログインIDとパスワードをパラメータとしてトークンを発行するAPI
+      requestBody:
+        description: ログイン情報
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login_id
+                - login_password
+              properties:
+                login_id:
+                  type: string
+                  description: ログインID
+                login_password:
+                  type: string
+                  description: ログインパスワード
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - respose_token
+                  - role
+                properties:
+                  response_token:
+                    type: string
+                  role:
+                    type: string
+                    example: "1"
+        "401":
+          description: ユーザーIDもしくはパスワードを間違えています
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /employees/{employeeId}/attendance:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 打刻
+      description: 入力されたパラメータから勤務記録テーブルに出勤時間、退勤時間、休憩開始終了時間を更新する。
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          description: 取得する従業員ID(UUID)
+          schema:
+            type: string
+      requestBody:
+        description: 打刻するボタンの種別パラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - attendance_param
+              properties:
+                attendance_param:
+                  type: string
+      responses:
+        "201":
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - attendanceId
+                  - attendance_param
+                  - recordedAt
+                properties:
+                  attendanceId:
+                    type: string
+                    description: 打刻ID
+                  attendance_param:
+                    type: string
+                    description: 打刻種別
+                    example: work_out
+                  recordedAt:
+                    type: string
+                    description: 打刻した日時
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /admin/employees/create:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 従業員登録
+      description: 入力されたパラメータから従業員テーブルに追加する
+      requestBody:
+        description: 従業員ログインパラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login_id
+                - login_name
+                - login_password
+              properties:
+                login_id:
+                  type: string
+                login_name:
+                  type: string
+                login_password:
+                  type: string
+      responses:
+        "201":
+          description: 従業員作成
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - employeeId
+                  - loginId
+                  - name
+                  - isActive
+                properties:
+                  employeeId:
+                    type: string
+                    format: uuid
+                    description: 従業員ID
+                  loginId:
+                    type: string
+                  name:
+                    type: string
+                  isActive:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: ログインIDが既に使われている
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/employees/deactivate:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 従業員無効化
+      description: 従業員テーブルにある従業員データの有効化を無効にする
+      requestBody:
+        description: 従業員検索パラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - login_id
+              properties:
+                login_id:
+                  type: string
+      responses:
+        "201":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - employeeId
+                  - isActive
+                properties:
+                  employeeId:
+                    type: string
+                    format: uuid
+                    description: 従業員ID
+                  isActive:
+                    type: boolean
+                    description: 確認用従業員有効化フラグ
+                    example: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: 対象が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: 対象の従業員は既に無効です
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/monthly-worklogs:
+    get:
+      security:
+        - bearerAuth: []
+      summary: 年月別従業員勤務一覧
+      description: 従業員勤務一覧テーブルを取得する
+      parameters:
+        - name: month
+          in: query
+          required: false
+          description: 検索する年月（YYYY-MM）
+          schema:
+            type: string
+        - name: employeeId
+          in: query
+          required: false
+          description: 従業員ID(UUID)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    employeeId:
+                      type: string
+                      format: uuid
+                    employeeName:
+                      type: string
+                      description: 従業員名
+                    work_month:
+                      type: string
+                      description: 出勤年月
+                      example: "2026-10"
+                    workInCount:
+                      type: integer
+                      description: 出勤回数
+                    workOutCount:
+                      type: integer
+                      description: 退勤回数
+                    workingTime:
+                      type: string
+                      description: 実働時間
+                    breakingTime:
+                      type: string
+                      description: 休憩時間
+                    overWorkingTime:
+                      type: string
+                      description: 時間外労働時間
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: VALIDATION_ERROR }
+        message: { type: string, example: 入力内容に誤りがあります }
+  responses:
+    BadRequest:
+      description: 不正なリクエストです。
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: トークンがない、または無効・期限切れ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
