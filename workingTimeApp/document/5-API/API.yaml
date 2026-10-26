@@ -20,13 +20,13 @@ paths:
             schema:
               type: object
               required:
-                - login_id
-                - login_password
+                - loginId
+                - loginPassword
               properties:
-                login_id:
+                loginId:
                   type: string
                   description: ログインID
-                login_password:
+                loginPassword:
                   type: string
                   description: ログインパスワード
       responses:
@@ -37,10 +37,10 @@ paths:
               schema:
                 type: object
                 required:
-                  - respose_token
+                  - responseToken
                   - role
                 properties:
-                  response_token:
+                  responseToken:
                     type: string
                   role:
                     type: string
@@ -73,9 +73,9 @@ paths:
             schema:
               type: object
               required:
-                - attendance_param
+                - attendanceParam
               properties:
-                attendance_param:
+                attendanceParam:
                   type: string
       responses:
         "201":
@@ -86,19 +86,43 @@ paths:
                 type: object
                 required:
                   - attendanceId
-                  - attendance_param
+                  - attendanceParam
                   - recordedAt
                 properties:
                   attendanceId:
                     type: string
                     description: 打刻ID
-                  attendance_param:
+                  attendanceParam:
                     type: string
                     description: 打刻種別
-                    example: work_out
                   recordedAt:
                     type: string
                     description: 打刻した日時
+              examples:
+                work_in:
+                  summary: 出勤
+                  value:
+                    attendanceId: "1"
+                    attendanceParam: "work_in"
+                    recordedAt: "2026-11-01T17:00:00.000Z"
+                break_in:
+                  summary: 休憩開始
+                  value:
+                    attendanceId: "2"
+                    attendanceParam: "break_in"
+                    recordedAt: "2026-11-01T20:00:00.000Z"
+                break_out:
+                  summary: 休憩終了
+                  value:
+                    attendanceId: "3"
+                    attendanceParam: "break_out"
+                    recordedAt: "2026-11-01T20:30:00.000Z"
+                work_out:
+                  summary: 退勤
+                  value:
+                    attendanceId: "4"
+                    attendanceParam: "work_out"
+                    recordedAt: "2026-11-01T22:00:00.000Z"
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
@@ -118,15 +142,15 @@ paths:
             schema:
               type: object
               required:
-                - login_id
-                - login_name
-                - login_password
+                - loginId
+                - loginName
+                - loginPassword
               properties:
-                login_id:
+                loginId:
                   type: string
-                login_name:
+                loginName:
                   type: string
-                login_password:
+                loginPassword:
                   type: string
       responses:
         "201":
@@ -155,6 +179,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
           description: ログインIDが既に使われている
           content:
@@ -176,9 +202,9 @@ paths:
             schema:
               type: object
               required:
-                - login_id
+                - loginId
               properties:
-                login_id:
+                loginId:
                   type: string
       responses:
         "201":
@@ -203,6 +229,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "404":
           description: 対象が存在しない
           content:
@@ -223,7 +251,7 @@ paths:
       summary: 年月別従業員勤務一覧
       description: 従業員勤務一覧テーブルを取得する
       parameters:
-        - name: month
+        - name: yearMonth
           in: query
           required: false
           description: 検索する年月（YYYY-MM）
@@ -251,7 +279,7 @@ paths:
                     employeeName:
                       type: string
                       description: 従業員名
-                    work_month:
+                    workYearMonth:
                       type: string
                       description: 出勤年月
                       example: "2026-10"
@@ -274,6 +302,8 @@ paths:
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
 components:
   schemas:
@@ -281,8 +311,8 @@ components:
       type: object
       required: [code, message]
       properties:
-        code: { type: string, example: VALIDATION_ERROR }
-        message: { type: string, example: 入力内容に誤りがあります }
+        code: { type: string, example: ERR-001 }
+        message: { type: string, example: エラーメッセージ内容 }
   responses:
     BadRequest:
       description: 不正なリクエストです。
@@ -292,6 +322,12 @@ components:
             $ref: "#/components/schemas/Error"
     Unauthorized:
       description: トークンがない、または無効・期限切れ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: アクセス権限がありません。
       content:
         application/json:
           schema:
