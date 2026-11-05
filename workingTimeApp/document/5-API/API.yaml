@@ -160,12 +160,12 @@ paths:
               schema:
                 type: object
                 required:
-                  - employeeId
+                  - id
                   - loginId
                   - name
                   - isActive
                 properties:
-                  employeeId:
+                  id:
                     type: string
                     format: uuid
                     description: 従業員ID
@@ -214,10 +214,10 @@ paths:
               schema:
                 type: object
                 required:
-                  - employeeId
+                  - id
                   - isActive
                 properties:
-                  employeeId:
+                  id:
                     type: string
                     format: uuid
                     description: 従業員ID
@@ -257,7 +257,7 @@ paths:
           description: 検索する年月（YYYY-MM）
           schema:
             type: string
-        - name: employeeId
+        - name: id
           in: query
           required: false
           description: 従業員ID(UUID)
@@ -273,7 +273,7 @@ paths:
                 items:
                   type: object
                   properties:
-                    employeeId:
+                    id:
                       type: string
                       format: uuid
                     employeeName:
