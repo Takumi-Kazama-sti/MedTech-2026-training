@@ -38,9 +38,12 @@ paths:
                 type: object
                 required:
                   - responseToken
+                  - employeeName
                   - role
                 properties:
                   responseToken:
+                    type: string
+                  employeeName:
                     type: string
                   role:
                     type: string
