@@ -1,0 +1,337 @@
+openapi: "3.0.3"
+info:
+  title: 出退勤アプリAPI
+  description: 出退勤アプリのAPIの仕様書
+  version: "1.0"
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      security: []
+      summary: ログイン
+      description: ログインIDとパスワードをパラメータとしてトークンを発行するAPI
+      requestBody:
+        description: ログイン情報
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - loginId
+                - loginPassword
+              properties:
+                loginId:
+                  type: string
+                  description: ログインID
+                loginPassword:
+                  type: string
+                  description: ログインパスワード
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - responseToken
+                  - employeeName
+                  - role
+                properties:
+                  responseToken:
+                    type: string
+                  employeeName:
+                    type: string
+                  role:
+                    type: string
+                    example: "1"
+        "401":
+          description: ユーザーIDもしくはパスワードを間違えています
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /employees/{employeeId}/attendance:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 打刻
+      description: 入力されたパラメータから勤務記録テーブルに出勤時間、退勤時間、休憩開始終了時間を更新する。
+      parameters:
+        - name: employeeId
+          in: path
+          required: true
+          description: 取得する従業員ID(UUID)
+          schema:
+            type: string
+      requestBody:
+        description: 打刻するボタンの種別パラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - attendanceParam
+              properties:
+                attendanceParam:
+                  type: string
+      responses:
+        "201":
+          description: 打刻成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - attendanceId
+                  - attendanceParam
+                  - recordedAt
+                properties:
+                  attendanceId:
+                    type: string
+                    description: 打刻ID
+                  attendanceParam:
+                    type: string
+                    description: 打刻種別
+                  recordedAt:
+                    type: string
+                    description: 打刻した日時
+              examples:
+                work_in:
+                  summary: 出勤
+                  value:
+                    attendanceId: "1"
+                    attendanceParam: "work_in"
+                    recordedAt: "2026-11-01T17:00:00.000Z"
+                break_in:
+                  summary: 休憩開始
+                  value:
+                    attendanceId: "2"
+                    attendanceParam: "break_in"
+                    recordedAt: "2026-11-01T20:00:00.000Z"
+                break_out:
+                  summary: 休憩終了
+                  value:
+                    attendanceId: "3"
+                    attendanceParam: "break_out"
+                    recordedAt: "2026-11-01T20:30:00.000Z"
+                work_out:
+                  summary: 退勤
+                  value:
+                    attendanceId: "4"
+                    attendanceParam: "work_out"
+                    recordedAt: "2026-11-01T22:00:00.000Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /admin/employees/create:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 従業員登録
+      description: 入力されたパラメータから従業員テーブルに追加する
+      requestBody:
+        description: 従業員ログインパラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - loginId
+                - loginName
+                - loginPassword
+              properties:
+                loginId:
+                  type: string
+                loginName:
+                  type: string
+                loginPassword:
+                  type: string
+      responses:
+        "201":
+          description: 従業員作成
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - loginId
+                  - name
+                  - isActive
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: 従業員ID
+                  loginId:
+                    type: string
+                  name:
+                    type: string
+                  isActive:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: ログインIDが既に使われている
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/employees/deactivate:
+    post:
+      security:
+        - bearerAuth: []
+      summary: 従業員無効化
+      description: 従業員テーブルにある従業員データの有効化を無効にする
+      requestBody:
+        description: 従業員検索パラメータ
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - loginId
+              properties:
+                loginId:
+                  type: string
+      responses:
+        "201":
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - id
+                  - isActive
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                    description: 従業員ID
+                  isActive:
+                    type: boolean
+                    description: 確認用従業員有効化フラグ
+                    example: false
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: 対象が存在しない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: 対象の従業員は既に無効です
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /admin/monthly-worklogs:
+    get:
+      security:
+        - bearerAuth: []
+      summary: 年月別従業員勤務一覧
+      description: 従業員勤務一覧テーブルを取得する
+      parameters:
+        - name: yearMonth
+          in: query
+          required: false
+          description: 検索する年月（YYYY-MM）
+          schema:
+            type: string
+        - name: id
+          in: query
+          required: false
+          description: 従業員ID(UUID)
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    employeeName:
+                      type: string
+                      description: 従業員名
+                    workYearMonth:
+                      type: string
+                      description: 出勤年月
+                      example: "2026-10"
+                    workInCount:
+                      type: integer
+                      description: 出勤回数
+                    workOutCount:
+                      type: integer
+                      description: 退勤回数
+                    workingTime:
+                      type: string
+                      description: 実働時間
+                    breakingTime:
+                      type: string
+                      description: 休憩時間
+                    overWorkingTime:
+                      type: string
+                      description: 時間外労働時間
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: ERR-001 }
+        message: { type: string, example: エラーメッセージ内容 }
+  responses:
+    BadRequest:
+      description: 不正なリクエストです。
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: トークンがない、または無効・期限切れ
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: アクセス権限がありません。
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
