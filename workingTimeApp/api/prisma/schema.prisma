@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ユーザー権限
+model Role {
+  id          Int @id
+  roleName    String @map("role_name") @db.VarChar(20)
+  roleDetail  String? @map("role_detail") @db.VarChar(50)
+  employees   Employee[]
+
+  @@map("roles")
+}
+
+// 従業員
+model Employee {
+  id                String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  loginId           String @unique @map("login_id") @db.VarChar(50)
+  loginPasswordHash String @map("login_password_hash") @db.VarChar(255)
+  name              String @db.VarChar(50)
+  roleId            Int @map("role_id")
+  isActive          Boolean @default(true) @map("is_active")
+  role              Role @relation(fields: [roleId], references: [id])
+  attendances       Attendance[]
+  monthlyIndexes    EmployeeMonthlyIndex[]
+
+  @@map("employees")
+}
+
+// 打刻
+model Attendance {
+  id          Int @id @default(autoincrement())
+  employeeId  String @map("employee_id") @db.Uuid
+  workDate    DateTime @map("work_date") @db.Date
+  workInTime  DateTime @map("work_in_time") @db.Timestamptz
+  workOutTime DateTime? @map("work_out_time") @db.Timestamptz
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  breaks      Break[]
+
+  @@index([employeeId, workDate])
+  @@map("attendances")
+}
+
+// 休憩
+model Break {
+  id            Int @id @default(autoincrement())
+  attendanceId  Int @map("attendance_id")
+  breakInTime   DateTime? @map("break_in_time") @db.Timestamptz
+  breakOutTime  DateTime? @map("break_out_time") @db.Timestamptz
+  attendance    Attendance @relation(fields: [attendanceId], references: [id])
+
+  @@map("breaks")
+}
+
+// 月別従業員勤務一覧
+model EmployeeMonthlyIndex {
+  id               Int      @id @default(autoincrement())
+  employeeId       String   @map("employee_id") @db.Uuid
+  employeeName     String   @map("employee_name") @db.VarChar(50)
+  workMonth        String   @map("work_month") @db.VarChar(50)
+  workInCount      Int      @default(0) @map("work_in_count")
+  workOutCount     Int      @default(0) @map("work_out_count")
+  workMonthlyTime  Int      @default(0) @map("work_monthly_time")
+  breakMonthlyTime Int      @default(0) @map("break_monthly_time")
+  overTime         Int      @default(0) @map("over_time")
+  employee         Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, workMonth])
+  @@map("employee_monthly_indexes")
+}
