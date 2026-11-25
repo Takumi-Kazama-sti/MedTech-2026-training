@@ -1,12 +1,16 @@
 import z from "zod";
 
 export type AttendanceParam = "work_in" | "work_out" | "break_in" | "break_out";
-export type CurrentAttendanceParam = "work_out" | "work_in" | "break_in" | "finished";
+export type CurrentAttendanceParam =
+  | "work_out"
+  | "work_in"
+  | "break_in"
+  | "finished";
 export const NEXT_PARAM: Record<AttendanceParam, CurrentAttendanceParam> = {
-  "work_in": "work_in",
-  "work_out": "finished",
-  "break_in": "break_in",
-  "break_out": "work_in",
+  work_in: "work_in",
+  work_out: "finished",
+  break_in: "break_in",
+  break_out: "work_in",
 };
 
 export const YEAR_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;

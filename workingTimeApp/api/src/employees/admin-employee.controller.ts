@@ -1,26 +1,27 @@
-import { Controller, Post, Get, Body, UseGuards, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { EmployeeService } from './employee.service';
-import {
-  createEmployeeSchema, deactivateEmployeeSchema, monthlyWorklogsSchema,
-  type createEmployeeRequest, type deactivateEmployeeRequest, type MonthlyWorklogsQuery
-}
-  from '../types/dtos/employee.schema';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  type createEmployeeRequest,
+  createEmployeeSchema,
+  type deactivateEmployeeRequest,
+  deactivateEmployeeSchema,
+  type MonthlyWorklogsQuery,
+  monthlyWorklogsSchema,
+} from '../types/dtos/employee.schema';
+import { EmployeeService } from './employee.service';
 
 // 管理者メニュー
 @Controller('admin')
-@UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard('jwt'))
 export class AdminEmployeeController {
-  constructor(
-    private readonly employeeService: EmployeeService,
-  ) { }
+  constructor(private readonly employeeService: EmployeeService) {}
 
   // 従業員登録
   @Post('employees/create')
   async createEmployee(
     @Body(new ZodValidationPipe(createEmployeeSchema))
-    body: createEmployeeRequest
+    body: createEmployeeRequest,
   ) {
     const employee = await this.employeeService.createEmployee(
       body.loginId,
@@ -35,9 +36,11 @@ export class AdminEmployeeController {
   @Post('employees/deactivate')
   async deactivateEmployee(
     @Body(new ZodValidationPipe(deactivateEmployeeSchema))
-    body: deactivateEmployeeRequest
+    body: deactivateEmployeeRequest,
   ) {
-    const employee = await this.employeeService.deactivateEmployee(body.loginId);
+    const employee = await this.employeeService.deactivateEmployee(
+      body.loginId,
+    );
     return employee;
   }
 
@@ -45,7 +48,7 @@ export class AdminEmployeeController {
   @Get('monthly-worklogs')
   async monthlyWorklogs(
     @Query(new ZodValidationPipe(monthlyWorklogsSchema))
-    query: MonthlyWorklogsQuery
+    query: MonthlyWorklogsQuery,
   ) {
     const workLogs = await this.employeeService.getMonthlyWorklogs(
       query.yearMonth,

@@ -1,11 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  TextField,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { z } from "zod";
-import { Button, Card, CardHeader, CardContent, TextField, Alert } from "@mui/material"
 import { login, logout } from "@/app/lib/api/login";
-import { loginFormSchema, type LoginForm as LoginFormValues } from "@/app/lib/schemas/loginSchema";
+import {
+  type LoginForm as LoginFormValues,
+  loginFormSchema,
+} from "@/app/lib/schemas/loginSchema";
 
 // 認証エラーは原因を区別せず同じ文言にする
 const AUTH_ERROR_MESSAGE = "ユーザーIDまたはパスワードが不正です";
@@ -38,16 +48,22 @@ export function LoginForm({ title, redirectTo, allowedRoles }: LoginFormProps) {
     });
     if (!parsed.success) {
       const errors = z.flattenError(parsed.error).fieldErrors;
-      setFieldErrors({ loginId: errors.loginId?.[0], loginPassword: errors.loginPassword?.[0] });
+      setFieldErrors({
+        loginId: errors.loginId?.[0],
+        loginPassword: errors.loginPassword?.[0],
+      });
       return;
     }
     setFieldErrors({});
 
     setIsSubmitting(true);
     try {
-      const result = await login(parsed.data.loginId, parsed.data.loginPassword);
+      const result = await login(
+        parsed.data.loginId,
+        parsed.data.loginPassword,
+      );
       if (allowedRoles && !allowedRoles.includes(result.role)) {
-        await logout().catch(() => { });
+        await logout().catch(() => {});
         setFormError(AUTH_ERROR_MESSAGE);
         return;
       }
@@ -64,7 +80,11 @@ export function LoginForm({ title, redirectTo, allowedRoles }: LoginFormProps) {
       <Card className="w-full max-w-sm">
         <CardHeader title={title} />
         <CardContent>
-          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="flex flex-col gap-5"
+          >
             <TextField
               name="loginId"
               label="ユーザーID"

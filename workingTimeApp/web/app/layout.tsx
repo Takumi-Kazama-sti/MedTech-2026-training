@@ -1,7 +1,7 @@
+import { ThemeProvider } from "@mui/material/styles";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
-import { ThemeProvider } from "@mui/material/styles";
 import theme from "./theme";
 import "./globals.css";
 

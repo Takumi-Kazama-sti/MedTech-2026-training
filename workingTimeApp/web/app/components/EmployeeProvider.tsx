@@ -1,15 +1,20 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LoginEmployee } from "../lib/schemas/loginSchema";
+import { createContext, useContext, useEffect, useState } from "react";
 import { getEmployee } from "../lib/api/login";
-
+import type { LoginEmployee } from "../lib/schemas/loginSchema";
 
 const EmployeeContext = createContext<LoginEmployee | null>(null);
 
 // ログイン時に保存した従業員情報を、下の画面すべてに配る
-export function EmployeeProvider({ loginPath, children }: { loginPath: string; children: React.ReactNode }) {
+export function EmployeeProvider({
+  loginPath,
+  children,
+}: {
+  loginPath: string;
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const [employee, setEmployee] = useState<LoginEmployee | null>(null);
 
@@ -21,7 +26,7 @@ export function EmployeeProvider({ loginPath, children }: { loginPath: string; c
       .then(setEmployee)
       .catch(() => {
         if (controller.signal.aborted) return;
-        router.replace(loginPath)
+        router.replace(loginPath);
       });
     return () => controller.abort();
   }, [router, loginPath]);

@@ -1,24 +1,30 @@
 "use client";
 
 import { Button } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Clock } from "@/app/components/Clock";
 import { useEmployee } from "@/app/components/EmployeeProvider";
 import * as employees from "@/app/lib/api/employees";
-import { useEffect, useState } from "react";
 import { ApiError } from "@/app/lib/api/login";
-import { useRouter } from "next/navigation";
-import { NEXT_PARAM, type AttendanceParam, type CurrentAttendanceParam } from "@/app/lib/schemas/employeeSchema";
+import {
+  type AttendanceParam,
+  type CurrentAttendanceParam,
+  NEXT_PARAM,
+} from "@/app/lib/schemas/employeeSchema";
 
 export default function AttendancePage() {
   const router = useRouter();
   const employee = useEmployee();
-  const [currentParam, setCurrentParam] = useState<CurrentAttendanceParam | null>(null);
+  const [currentParam, setCurrentParam] =
+    useState<CurrentAttendanceParam | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (!employee) return;
     const controller = new AbortController();
-    employees.getCurrentAttendance(employee.id, controller.signal)
+    employees
+      .getCurrentAttendance(employee.id, controller.signal)
       .then((res) => setCurrentParam(res.currentAttendance))
       .catch((e) => {
         if (controller.signal.aborted) return;
@@ -63,7 +69,9 @@ export default function AttendancePage() {
               borderColor: "#006400",
               backgroundColor: "#006400",
             }}
-            onClick={() => employee ? handleClick(employee.id, "work_in") : null}
+            onClick={() =>
+              employee ? handleClick(employee.id, "work_in") : null
+            }
             disabled={currentParam !== "work_out"}
           >
             出勤
@@ -76,21 +84,31 @@ export default function AttendancePage() {
               borderColor: "#ff0000",
               backgroundColor: "#ff0000",
             }}
-            onClick={() => employee ? handleClick(employee.id, "work_out") : null}
+            onClick={() =>
+              employee ? handleClick(employee.id, "work_out") : null
+            }
             disabled={currentParam !== "work_in"}
           >
             退勤
           </Button>
         </div>
         <div className="flex w-80 gap-6">
-          <Button variant="outlined" className="flex-1"
-            onClick={() => employee ? handleClick(employee.id, "break_in") : null}
+          <Button
+            variant="outlined"
+            className="flex-1"
+            onClick={() =>
+              employee ? handleClick(employee.id, "break_in") : null
+            }
             disabled={currentParam !== "work_in"}
           >
             休憩開始
           </Button>
-          <Button variant="outlined" className="flex-1"
-            onClick={() => employee ? handleClick(employee.id, "break_out") : null}
+          <Button
+            variant="outlined"
+            className="flex-1"
+            onClick={() =>
+              employee ? handleClick(employee.id, "break_out") : null
+            }
             disabled={currentParam !== "break_in"}
           >
             休憩終了

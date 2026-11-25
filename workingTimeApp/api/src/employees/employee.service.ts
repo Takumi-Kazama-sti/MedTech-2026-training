@@ -1,25 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { STATUS_BY_BREAKS, attendanceParamEnum } from '../types/dtos/employee.schema';
-import { PrismaService } from '../prisma/prisma.service';
-import { ApiException } from '../common/errors/app-errors';
+import * as argon2 from 'argon2';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import * as argon2 from "argon2";
+import utc from 'dayjs/plugin/utc';
+import { ApiException } from '../common/errors/app-errors';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  attendanceParamEnum,
+  STATUS_BY_BREAKS,
+} from '../types/dtos/employee.schema';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 @Injectable()
 export class EmployeeService {
-  constructor(
-    private readonly prismaService: PrismaService,
-  ) { }
+  constructor(private readonly prismaService: PrismaService) {}
   private readonly logger = new Logger(EmployeeService.name);
   // 従業員取得
-  async findById(
-    id: string,
-  ) {
+  async findById(id: string) {
     if (!id) {
       throw new ApiException('VALIDATION_FAILED', 'IDが存在しません');
     }
@@ -34,9 +33,7 @@ export class EmployeeService {
   }
 
   // 従業員取得(ログインID)
-  async findByLoginId(
-    loginId: string,
-  ) {
+  async findByLoginId(loginId: string) {
     if (!loginId || loginId.length === 0) {
       throw new ApiException('VALIDATION_FAILED', 'ログインIDが存在しません');
     }
@@ -52,8 +49,8 @@ export class EmployeeService {
         role: {
           select: {
             id: true,
-          }
-        }
+          },
+        },
       },
     });
 
@@ -81,7 +78,7 @@ export class EmployeeService {
     if (openAttendance !== null) {
       return {
         openAttendance,
-        currentAttendance: STATUS_BY_BREAKS[openAttendance.breaks.length]
+        currentAttendance: STATUS_BY_BREAKS[openAttendance.breaks.length],
       };
     }
     const finishedAttendance = await this.prismaService.attendance.findFirst({
@@ -98,9 +95,7 @@ export class EmployeeService {
   }
 
   // 現在の打刻状態を取得
-  async getCurrentAttendance(
-    id: string,
-  ) {
+  async getCurrentAttendance(id: string) {
     const employee = await this.findById(id);
     if (!employee) {
       throw new ApiException('EMPLOYEE_NOT_FOUND');
@@ -110,21 +105,19 @@ export class EmployeeService {
   }
 
   // 打刻
-  async attendance(
-    id: string,
-    attendanceParam: string,
-  ) {
+  async attendance(id: string, attendanceParam: string) {
     const employee = await this.findById(id);
     if (!employee) {
       throw new ApiException('EMPLOYEE_NOT_FOUND');
     }
     // 今の状態を調べる
-    const { openAttendance, currentAttendance } = await this.findCurrentAttendance(id);
+    const { openAttendance, currentAttendance } =
+      await this.findCurrentAttendance(id);
     const todayNow = new Date();
     // 打刻パラメータによる分岐実行
     switch (attendanceParam) {
-      case "work_in":
-        if (currentAttendance !== "work_out") {
+      case 'work_in': {
+        if (currentAttendance !== 'work_out') {
           throw new ApiException('INVALID_ATTENDANCE_STATE');
         }
         const workIn = await this.prismaService.attendance.create({
@@ -132,15 +125,16 @@ export class EmployeeService {
             employeeId: id,
             workDate: new Date(dayjs().tz('Asia/Tokyo').format('YYYY-MM-DD')),
             workInTime: todayNow,
-          }
+          },
         });
         return {
           attendanceId: workIn.id,
           attendanceParam: attendanceParam,
           recordedAt: todayNow,
         };
-      case "break_in":
-        if (currentAttendance !== "work_in") {
+      }
+      case 'break_in':
+        if (currentAttendance !== 'work_in') {
           throw new ApiException('INVALID_ATTENDANCE_STATE');
         }
         if (openAttendance !== null) {
@@ -156,10 +150,13 @@ export class EmployeeService {
             recordedAt: todayNow,
           };
         } else {
-          throw new ApiException('VALIDATION_FAILED', `不正な打刻パラメータです：${attendanceParam}`);
+          throw new ApiException(
+            'VALIDATION_FAILED',
+            `不正な打刻パラメータです：${attendanceParam}`,
+          );
         }
-      case "break_out":
-        if (currentAttendance !== "break_in") {
+      case 'break_out':
+        if (currentAttendance !== 'break_in') {
           throw new ApiException('INVALID_ATTENDANCE_STATE');
         }
         if (openAttendance !== null) {
@@ -175,10 +172,13 @@ export class EmployeeService {
             recordedAt: todayNow,
           };
         } else {
-          throw new ApiException('VALIDATION_FAILED', `不正な打刻パラメータです：${attendanceParam}`);
+          throw new ApiException(
+            'VALIDATION_FAILED',
+            `不正な打刻パラメータです：${attendanceParam}`,
+          );
         }
-      case "work_out":
-        if (currentAttendance !== "work_in") {
+      case 'work_out':
+        if (currentAttendance !== 'work_in') {
           throw new ApiException('INVALID_ATTENDANCE_STATE');
         }
         if (openAttendance !== null) {
@@ -192,14 +192,22 @@ export class EmployeeService {
               },
               include: {
                 breaks: true,
-              }
+              },
             });
             // 実働時間等の計算
-            const dutySeconds = Math.floor((todayNow.getTime() - workOutAttendance.workInTime.getTime()) / 1000);
+            const dutySeconds = Math.floor(
+              (todayNow.getTime() - workOutAttendance.workInTime.getTime()) /
+                1000,
+            );
             const breakSeconds = workOutAttendance.breaks.reduce(
               (sum, breaks) =>
-                sum + (breaks.breakInTime && breaks.breakOutTime ?
-                  Math.floor((breaks.breakOutTime.getTime() - breaks.breakInTime.getTime()) / 1000)
+                sum +
+                (breaks.breakInTime && breaks.breakOutTime
+                  ? Math.floor(
+                      (breaks.breakOutTime.getTime() -
+                        breaks.breakInTime.getTime()) /
+                        1000,
+                    )
                   : 0),
               0,
             );
@@ -207,13 +215,15 @@ export class EmployeeService {
             const overSeconds = Math.max(0, workSeconds - 28800);
 
             // 月別勤務一覧更新
-            const workMonth = dayjs.utc(workOutAttendance.workDate).format('YYYY-MM');
+            const workMonth = dayjs
+              .utc(workOutAttendance.workDate)
+              .format('YYYY-MM');
             await tx.employeeMonthlyIndex.upsert({
               where: {
                 employeeId_workMonth: {
                   employeeId: id,
                   workMonth: workMonth,
-                }
+                },
               },
               create: {
                 employeeId: id,
@@ -231,7 +241,7 @@ export class EmployeeService {
                 workMonthlyTime: { increment: workSeconds },
                 breakMonthlyTime: { increment: breakSeconds },
                 overTime: { increment: overSeconds },
-              }
+              },
             });
             return workOutAttendance;
           });
@@ -242,7 +252,10 @@ export class EmployeeService {
             recordedAt: todayNow,
           };
         } else {
-          throw new ApiException('VALIDATION_FAILED', `不正な打刻パラメータです：${attendanceParam}`);
+          throw new ApiException(
+            'VALIDATION_FAILED',
+            `不正な打刻パラメータです：${attendanceParam}`,
+          );
         }
     }
   }
@@ -263,8 +276,8 @@ export class EmployeeService {
         isActive: true,
         role: {
           connect: { id: role },
-        }
-      }
+        },
+      },
     });
 
     return {
@@ -276,15 +289,13 @@ export class EmployeeService {
   }
 
   // 従業員無効化
-  async deactivateEmployee(
-    loginId: string,
-  ) {
+  async deactivateEmployee(loginId: string) {
     const tempEmployee = await this.findByLoginId(loginId);
     if (!tempEmployee) {
       throw new ApiException('EMPLOYEE_NOT_FOUND');
     }
     if (!tempEmployee.isActive) {
-      throw new ApiException("EMPLOYEE_ALREADY_INACTIVE");
+      throw new ApiException('EMPLOYEE_ALREADY_INACTIVE');
     }
 
     const employee = await this.prismaService.employee.update({
@@ -300,10 +311,7 @@ export class EmployeeService {
   }
 
   // 月別従業員勤務一覧取得
-  async getMonthlyWorklogs(
-    yearMonth?: string,
-    employeeId?: string,
-  ) {
+  async getMonthlyWorklogs(yearMonth?: string, employeeId?: string) {
     const worklogs = await this.prismaService.employeeMonthlyIndex.findMany({
       where: {
         workMonth: yearMonth,
@@ -311,12 +319,12 @@ export class EmployeeService {
       },
       orderBy: [
         {
-          workMonth: 'desc'
+          workMonth: 'desc',
         },
         {
           employeeName: 'asc',
         },
-      ]
+      ],
     });
     return worklogs.map((w) => ({
       id: w.employeeId,

@@ -1,12 +1,12 @@
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { ApiExceptionsFilter } from './common/filters/exceptions.filter';
-import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    bufferLogs: true
+    bufferLogs: true,
   });
   await app.useLogger(app.get(Logger));
   app.useGlobalFilters(new ApiExceptionsFilter());
