@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { EmployeeService } from '../employees/employee.service';
 import { ApiException } from '../common/errors/app-errors';
+import { EmployeeService } from '../employees/employee.service';
 
 export const JWT_SECRET = 'dev-secret-key';
 
@@ -20,11 +20,11 @@ export interface AuthUser {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    private readonly employeeService: EmployeeService,
-  ) {
+  constructor(private readonly employeeService: EmployeeService) {
     super({
-      jwtFromRequest: ExtractJwt.fromExtractors([(req) => req.cookies.token ?? null]),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        (req) => req.cookies.token ?? null,
+      ]),
       ignoreExpiration: false,
       secretOrKey: JWT_SECRET,
     });
@@ -38,6 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     return {
       employeeId: payload.employeeId,
       role: payload.role.toString(),
-    }
+    };
   }
 }

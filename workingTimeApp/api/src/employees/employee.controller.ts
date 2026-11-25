@@ -1,19 +1,20 @@
-import { Controller, Post, Get, Body, UseGuards, Param } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { EmployeeService } from './employee.service';
-import { attendanceSchema, type AttendanceRequest } from '../types/dtos/employee.schema';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { type AuthUser } from '../auth/jwt.strategy';
+import type { AuthUser } from '../auth/jwt.strategy';
 import { ApiException } from '../common/errors/app-errors';
+import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import {
+  type AttendanceRequest,
+  attendanceSchema,
+} from '../types/dtos/employee.schema';
+import { EmployeeService } from './employee.service';
 
 // 従業員メニュー
 @Controller('employees')
-@UseGuards(AuthGuard("jwt"))
+@UseGuards(AuthGuard('jwt'))
 export class EmployeeController {
-  constructor(
-    private readonly employeeService: EmployeeService,
-  ) { }
+  constructor(private readonly employeeService: EmployeeService) {}
 
   // 打刻
   @Post(':id/attendance')
@@ -22,13 +23,16 @@ export class EmployeeController {
     id: string,
     @CurrentUser() user: AuthUser,
     @Body(new ZodValidationPipe(attendanceSchema))
-    body: AttendanceRequest
+    body: AttendanceRequest,
   ) {
     // ログインした従業員以外の打刻は禁止
     if (id !== user.employeeId) {
       throw new ApiException('FORBIDDEN');
     }
-    const attendaceInfo = await this.employeeService.attendance(id, body.attendanceParam);
+    const attendaceInfo = await this.employeeService.attendance(
+      id,
+      body.attendanceParam,
+    );
     return attendaceInfo;
   }
 
@@ -44,5 +48,4 @@ export class EmployeeController {
     }
     return this.employeeService.getCurrentAttendance(id);
   }
-
 }

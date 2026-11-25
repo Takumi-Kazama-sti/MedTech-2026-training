@@ -1,6 +1,12 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
-import { Response } from 'express';
-import { AppErrorKey, ApiException } from '../errors/app-errors';
+import {
+  type ArgumentsHost,
+  Catch,
+  type ExceptionFilter,
+  HttpException,
+  Logger,
+} from '@nestjs/common';
+import type { Response } from 'express';
+import { ApiException, type AppErrorKey } from '../errors/app-errors';
 
 const ERROR_KEY_BY_STATUS: Partial<Record<number, AppErrorKey>> = {
   400: 'VALIDATION_FAILED',
@@ -26,9 +32,10 @@ export class ApiExceptionsFilter implements ExceptionFilter {
       return exception;
     }
 
-    const key = exception instanceof HttpException
-      ? ERROR_KEY_BY_STATUS[exception.getStatus()]
-      : undefined;
+    const key =
+      exception instanceof HttpException
+        ? ERROR_KEY_BY_STATUS[exception.getStatus()]
+        : undefined;
     if (!key) {
       // 想定外のエラー：中身はログにだけ出し、利用者には汎用メッセージを返す
       this.logger.error(exception);

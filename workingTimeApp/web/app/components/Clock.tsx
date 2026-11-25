@@ -1,7 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { Typography } from "@mui/material";
+import { useSyncExternalStore } from "react";
 
 function changedClock(onChange: () => void) {
   const timer = setInterval(onChange, 1000);
@@ -34,12 +34,18 @@ const timeFormat = new Intl.DateTimeFormat("ja-JP", {
 });
 
 export function Clock() {
-  const seconds = useSyncExternalStore(changedClock, getSnapShot, getServerSnapShot);
+  const seconds = useSyncExternalStore(
+    changedClock,
+    getSnapShot,
+    getServerSnapShot,
+  );
   const now = seconds !== null ? new Date(seconds * 1000) : null;
 
   return (
     <div className="flex flex-col items-center">
-      <Typography variant="h3">{now ? dateFormat.format(now) : "9999/99/99"}</Typography>
+      <Typography variant="h3">
+        {now ? dateFormat.format(now) : "9999/99/99"}
+      </Typography>
       <Typography variant="h1" className="tabular-nums">
         {now ? timeFormat.format(now) : "--:--:--"}
       </Typography>
