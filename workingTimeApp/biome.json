@@ -1,0 +1,57 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "root": "..",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.next",
+      "!**/out",
+      "!**/build",
+      "!**/coverage",
+      "!**/generated",
+      "!**/next-env.d.ts",
+      "!document",
+      "!**/public/**/*.svg"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["api/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "noFloatingPromises": "error"
+          }
+        }
+      }
+    }
+  ]
+}
